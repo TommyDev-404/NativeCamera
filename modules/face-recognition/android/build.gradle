@@ -1,0 +1,29 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.facerecognition'
+version = '0.1.0'
+
+android {
+  namespace "expo.modules.facerecognition"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+dependencies {
+  implementation 'com.github.HyperInspire:inspireface-android-sdk:1.2.3.post4'
+
+  implementation 'androidx.appcompat:appcompat:1.7.1'
+
+  implementation 'androidx.camera:camera-core:1.6.2'
+  implementation 'androidx.camera:camera-camera2:1.6.2'
+  implementation 'androidx.camera:camera-lifecycle:1.6.2'
+  implementation 'androidx.camera:camera-view:1.6.2'
+}
