@@ -3,7 +3,6 @@ package expo.modules.facerecognition.core
 import android.content.Context
 import android.graphics.RectF
 import android.os.SystemClock
-import androidx.annotation.Nullable
 import androidx.core.content.ContextCompat
 import com.insightface.sdk.inspireface.InspireFace
 import com.insightface.sdk.inspireface.base.FaceFeature
@@ -12,6 +11,8 @@ import com.insightface.sdk.inspireface.base.ImageStream
 import com.insightface.sdk.inspireface.base.MultipleFaceData
 import com.insightface.sdk.inspireface.base.Session
 import expo.modules.facerecognition.R
+import expo.modules.facerecognition.database.StudentRepository
+import expo.modules.facerecognition.database.models.Student
 
 /**
  * Tracks only SDK face 0 and searches it after roughly one stable second.
@@ -20,6 +21,7 @@ class RecognitionFaceAnalyzer(
     context: Context,
     private val overlay: FaceOverlayView,
     private val repository: FaceRepository,
+    private val studentRepository: StudentRepository,
     private val libraryEmpty: Boolean,
     private val listener: Listener
 ) : UprightFaceCameraAnalyzer() {
@@ -35,12 +37,10 @@ class RecognitionFaceAnalyzer(
     }
 
     interface Listener {
-        /**
-         * Called on the camera analysis executor.
-         */
+
         fun onState(
             state: State,
-            record: FaceRecord?,
+            student: Student?,
             confidence: Float,
             threshold: Float
         )
@@ -57,16 +57,25 @@ class RecognitionFaceAnalyzer(
         FaceStabilityGate(STABLE_RECOGNITION_MS, 1L)
 
     private val waitingColor =
-        ContextCompat.getColor(context, R.color.liveness_accent)
+        ContextCompat.getColor(
+            context,
+            R.color.liveness_accent
+        )
 
     private val matchColor =
         waitingColor
 
     private val noMatchColor =
-        ContextCompat.getColor(context, R.color.liveness_fail)
+        ContextCompat.getColor(
+            context,
+            R.color.liveness_fail
+        )
 
     private val warningColor =
-        ContextCompat.getColor(context, R.color.liveness_warn)
+        ContextCompat.getColor(
+            context,
+            R.color.liveness_warn
+        )
 
     @Volatile
     private var mirrored = true
@@ -75,7 +84,9 @@ class RecognitionFaceAnalyzer(
     private var resetRequested = false
 
     private var recognizedStableRun = false
+
     private var lastState: State? = null
+
     private var currentBoxColor = waitingColor
 
     override fun beforeFrame() {
@@ -86,10 +97,10 @@ class RecognitionFaceAnalyzer(
     }
 
     override fun createSession(): Session {
-         return requireNotNull(
+        return requireNotNull(
             FaceEngine.createVideoRecognitionSession()
-         )
-   }
+        )
+    }
 
     override fun onFaces(
         session: Session?,
@@ -100,19 +111,26 @@ class RecognitionFaceAnalyzer(
         uprightHeight: Int,
         frameStart: Long
     ) {
-        if (faces == null || faces.detectedNum == 0) {
+        if (
+            faces == null ||
+            faces.detectedNum == 0
+        ) {
             resetRecognition()
+
             overlay.submit(null)
+
             report(
                 State.NO_FACE,
                 null,
                 Float.NaN,
                 Float.NaN
             )
+
             return
         }
 
-        val first: FaceRect = faces.rects[0]
+        val first: FaceRect =
+            faces.rects[0]
 
         val face = RectF(
             first.x.toFloat(),
@@ -121,8 +139,12 @@ class RecognitionFaceAnalyzer(
             (first.y + first.height).toFloat()
         )
 
-        if (face.width() < uprightWidth * MIN_FACE_WIDTH_RATIO) {
+        if (
+            face.width() <
+            uprightWidth * MIN_FACE_WIDTH_RATIO
+        ) {
             resetRecognition()
+
             currentBoxColor = warningColor
 
             submitFace(
@@ -142,20 +164,24 @@ class RecognitionFaceAnalyzer(
         }
 
         val trackId =
-            if (faces.trackIds != null && faces.trackIds.isNotEmpty()) {
+            if (
+                faces.trackIds != null &&
+                faces.trackIds.isNotEmpty()
+            ) {
                 faces.trackIds[0]
             } else {
                 0
             }
 
-        val stable = stabilityGate.update(
-            trackId,
-            face.left,
-            face.top,
-            face.right,
-            face.bottom,
-            SystemClock.elapsedRealtime()
-        )
+        val stable =
+            stabilityGate.update(
+                trackId,
+                face.left,
+                face.top,
+                face.right,
+                face.bottom,
+                SystemClock.elapsedRealtime()
+            )
 
         if (stable < 0f) {
             recognizedStableRun = false
@@ -196,11 +222,11 @@ class RecognitionFaceAnalyzer(
                     Float.NaN
                 )
             } else {
-               
-               val activeSession = session ?: run {
-                   onSessionError()
-                   return
-               }
+                val activeSession =
+                    session ?: run {
+                        onSessionError()
+                        return
+                    }
 
                 recognize(
                     activeSession,
@@ -252,15 +278,34 @@ class RecognitionFaceAnalyzer(
 
         val result = repository.search(feature)
 
-        if (result.matched && result.record != null) {
-            currentBoxColor = matchColor
+        if (
+            result.matched &&
+            result.faceId != null
+        ) {
+            val student =
+                studentRepository.getByFaceId(
+                    result.faceId
+                )
 
-            report(
-                State.MATCHED,
-                result.record,
-                result.confidence,
-                result.threshold
-            )
+            if (student != null) {
+                currentBoxColor = matchColor
+
+                report(
+                    State.MATCHED,
+                    student,
+                    result.confidence,
+                    result.threshold
+                )
+            } else {
+                currentBoxColor = noMatchColor
+
+                report(
+                    State.NO_MATCH,
+                    null,
+                    result.confidence,
+                    result.threshold
+                )
+            }
         } else {
             currentBoxColor = noMatchColor
 
@@ -283,7 +328,9 @@ class RecognitionFaceAnalyzer(
         listener.onSessionError()
     }
 
-    fun setMirrored(mirrored: Boolean) {
+    fun setMirrored(
+        mirrored: Boolean
+    ) {
         this.mirrored = mirrored
     }
 
@@ -316,11 +363,12 @@ class RecognitionFaceAnalyzer(
 
     private fun report(
         state: State,
-        record: FaceRecord?,
+        student: Student?,
         confidence: Float,
         threshold: Float
     ) {
-        if (state == lastState &&
+        if (
+            state == lastState &&
             state != State.MATCHED &&
             state != State.NO_MATCH
         ) {
@@ -331,7 +379,7 @@ class RecognitionFaceAnalyzer(
 
         listener.onState(
             state,
-            record,
+            student,
             confidence,
             threshold
         )

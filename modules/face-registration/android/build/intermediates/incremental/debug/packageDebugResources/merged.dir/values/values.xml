@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="compare_ring_track">#FF23332F</color>
+    <color name="compare_status_scrim">#D907110F</color>
+    <color name="home_background">#FF07110F</color>
+    <color name="home_stroke">#FF263A35</color>
+    <color name="home_surface">#FF101C19</color>
+    <color name="home_text_muted">#FF71847F</color>
+    <color name="home_text_secondary">#FF9FB2AD</color>
+    <color name="home_tile_blue">#FF84C8FF</color>
+    <color name="home_tile_cyan">#FF79DDD9</color>
+    <color name="home_tile_green">#FF72E2B5</color>
+    <color name="home_tile_lime">#FFB8E986</color>
+    <color name="home_tile_orange">#FFFFC988</color>
+    <color name="home_tile_pink">#FFFFB8D1</color>
+    <color name="home_tile_purple">#FFC6B5FF</color>
+    <color name="home_tile_text_dark">#FF07110F</color>
+    <color name="home_tile_text_dark_secondary">#B307110F</color>
+    <color name="home_tile_yellow">#FFFFE082</color>
+    <color name="liveness_accent">#FF00E5A0</color>
+    <color name="liveness_chip_bg">#B3000000</color>
+    <color name="liveness_fail">#FFFF5252</color>
+    <color name="liveness_scrim">#99000000</color>
+    <color name="liveness_warn">#FFFFC400</color>
+    <color name="white">#FFFFFFFF</color>
+    <string name="capture_complete">Capture complete</string>
+    <string name="capture_complete_hint">The ring is full. Preparing this face…</string>
+    <string name="capture_failed">Could not capture this frame</string>
+    <string name="capture_first_face_hint">The first detected face is tracked. Keep it clear and centered.</string>
+    <string name="capture_hold_still">Hold still</string>
+    <string name="capture_keep_still">Keep holding still</string>
+    <string name="capture_move_closer">Move closer</string>
+    <string name="capture_no_face">Place a face in the camera</string>
+    <string name="capture_progress">Stability %1$d%%</string>
+    <string name="capture_retry_hint">Hold still and the app will try again.</string>
+    <string name="capture_warmup_hint">Stay steady for 1 second to begin registering your face.</string>
+    <string name="msg_camera_unavailable">Camera is unavailable</string>
+    <string name="msg_engine_failed">Failed to initialize the face engine</string>
+    <string name="msg_initializing">Initializing engine…</string>
+    <string name="msg_no_front_camera">No front camera available on this device</string>
+</resources>

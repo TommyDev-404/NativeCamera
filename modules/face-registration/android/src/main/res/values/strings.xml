@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="msg_initializing">Initializing engine…</string>
+    <string name="msg_engine_failed">Failed to initialize the face engine</string>
+    <string name="msg_no_front_camera">No front camera available on this device</string>
+    <string name="msg_camera_unavailable">Camera is unavailable</string>
+
+    <string name="capture_first_face_hint">The first detected face is tracked. Keep it clear and centered.</string>
+    <string name="capture_move_closer">Move closer</string>
+    <string name="capture_hold_still">Hold still</string>
+    <string name="capture_warmup_hint">Stay steady for 1 second to begin registering your face.</string>
+    <string name="capture_keep_still">Keep holding still</string>
+    <string name="capture_progress">Stability %1$d%%</string>
+    <string name="capture_complete">Capture complete</string>
+    <string name="capture_complete_hint">The ring is full. Preparing this face…</string>
+    <string name="capture_no_face">Place a face in the camera</string>
+    <string name="capture_failed">Could not capture this frame</string>
+    <string name="capture_retry_hint">Hold still and the app will try again.</string>
+
+</resources>
