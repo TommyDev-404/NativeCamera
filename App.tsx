@@ -21,8 +21,18 @@ type EmbeddingEvent = {
   };
 };
 
+type StudentRecognizedEvent = {
+  nativeEvent: {
+    studentId: string;
+  };
+};
+
 type FaceRegistrationViewProps = ViewProps & {
   onEmbedding?: (event: EmbeddingEvent) => void;
+};
+
+type FaceRecognitionViewProps = ViewProps & {
+  onStudentRecognized?: (event: StudentRecognizedEvent) => void;
 };
 
 type RegisterStudentData = {
@@ -49,7 +59,7 @@ type RegisterStudentResponse = {
 const API_URL = 'http://10.231.147.22:3000';
 
 const NativeFaceRecognitionView =
-  requireNativeView<ViewProps>('FaceRecognition');
+  requireNativeView<FaceRecognitionViewProps>('FaceRecognition');
 
 const NativeFaceRegistrationView =
   requireNativeView<FaceRegistrationViewProps>('FaceRegistration');
@@ -232,6 +242,16 @@ export default function App() {
     }
   };
 
+  const handleStudentRecognized = async (
+    event: StudentRecognizedEvent,
+  ) => {
+    const { studentId } = event.nativeEvent;
+  
+    console.log('Recognized student:', studentId);
+  
+    // Create stamping record here
+  };
+
   const getSubtitle = () => {
     if (status === 'registering-face') {
       return 'Registering student and face...';
@@ -302,6 +322,7 @@ export default function App() {
             <NativeFaceRecognitionView
               key="recognition"
               style={styles.preview}
+              onStudentRecognized={handleStudentRecognized}
             />
           ) : (
             <NativeFaceRegistrationView

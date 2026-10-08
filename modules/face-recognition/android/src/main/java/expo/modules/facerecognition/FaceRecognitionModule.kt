@@ -12,9 +12,12 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import org.json.JSONObject
 import android.util.Log
+import expo.modules.kotlin.events.EventDispatcher
 
 class FaceRecognitionModule : Module() {
 
+    private val onStudentRecognized by EventDispatcher()
+    
     private lateinit var scannerDatabase: ScannerDatabase
     private lateinit var studentRepository: StudentRepository
     private lateinit var eventRepository: EventRepository
@@ -169,6 +172,8 @@ class FaceRecognitionModule : Module() {
                 false
             }
         }
+
+        Events("onStudentRecognized")
 
         View(FaceRecognitionView::class) {}
     }

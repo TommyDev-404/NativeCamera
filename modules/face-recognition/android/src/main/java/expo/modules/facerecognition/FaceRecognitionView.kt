@@ -31,6 +31,8 @@ class FaceRecognitionView(
     appContext: AppContext
 ) : ExpoView(context, appContext), CameraPreviewController.Listener {
 
+    val onStudentRecognized by EventDispatcher()
+    
     companion object {
         private const val TAG = "FaceRecognitionView"
     }
@@ -358,6 +360,14 @@ class FaceRecognitionView(
             }
 
             RecognitionFaceAnalyzer.State.MATCHED -> {
+                if (student != null) {
+                    onStudentRecognized(
+                        mapOf(
+                            "studentId" to student.studentId
+                        )
+                    )
+                }
+                
                 resultTitle.setText(
                     R.string.recognition_match_found
                 )
