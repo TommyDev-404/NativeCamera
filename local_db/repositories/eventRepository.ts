@@ -9,31 +9,32 @@ export type Event = {
   end_time: string;
 };
 
+
 export async function insertEvents(events: Event[]) {
-  console.log("Events: ", events);
   const db = await getDatabase();
 
-  for (const event of events) {
-    await db.runAsync(
-      `
-        INSERT OR REPLACE INTO events (
-          id,
-          name,
-          start_date,
-          end_date,
-          start_time,
-          end_time
+  await db.withTransactionAsync(async () => {
+    for (const event of events) {
+      await db.runAsync(
+        `INSERT INTO events (
+          id, name, start_date, end_date, start_time, end_time
         )
         VALUES (?, ?, ?, ?, ?, ?)
-      `,
-      event.id,
-      event.name,
-      event.start_date,
-      event.end_date,
-      event.start_time,
-      event.end_time
-    );
-  }
+        ON CONFLICT(id) DO UPDATE SET
+          name = excluded.name,
+          start_date = excluded.start_date,
+          end_date = excluded.end_date,
+          start_time = excluded.start_time,
+          end_time = excluded.end_time`,
+        event.id,
+        event.name,
+        event.start_date,
+        event.end_date,
+        event.start_time,
+        event.end_time
+      );
+    }
+  });
 }
 
 export async function getEventById(
@@ -75,16 +76,17 @@ export async function getActiveEvents(
       FROM events
       WHERE start_date <= ?
         AND end_date >= ?
-        AND start_time <= ?
-        AND end_time >= ?
-      ORDER BY start_time
     `,
     date,
-    date,
-    time,
-    time
+    date
   );
 }
+
+/*
+?
+        AND start_time <= ?
+        AND end_time >= ?
+*/
 
 export async function deleteAllEvents() {
   const db = await getDatabase();

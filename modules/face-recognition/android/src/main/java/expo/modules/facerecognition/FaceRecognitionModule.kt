@@ -12,11 +12,8 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import org.json.JSONObject
 import android.util.Log
-import expo.modules.kotlin.events.EventDispatcher
 
 class FaceRecognitionModule : Module() {
-
-    private val onStudentRecognized by EventDispatcher()
     
     private lateinit var scannerDatabase: ScannerDatabase
     private lateinit var studentRepository: StudentRepository
@@ -106,7 +103,6 @@ class FaceRecognitionModule : Module() {
                 for (i in 0 until faceEmbeddingsJson.length()) {
                     val item = faceEmbeddingsJson.getJSONObject(i)
                     val faceId = item.getLong("id")
-                    val studentId = item.getString("student_id")
                     val embeddingJson = item.getJSONArray("embedding")
         
                     val embedding = FloatArray(embeddingJson.length()) { index ->
@@ -114,13 +110,6 @@ class FaceRecognitionModule : Module() {
                             .getDouble(index)
                             .toFloat()
                     }
-        
-                    Log.d(
-                        "FaceRecognition",
-                        "Processing face $faceId " +
-                            "for student $studentId " +
-                            "with ${embedding.size} values"
-                    )
         
                     val feature = FaceFeature()
         
@@ -173,9 +162,9 @@ class FaceRecognitionModule : Module() {
             }
         }
 
-        Events("onStudentRecognized")
-
-        View(FaceRecognitionView::class) {}
+        View(FaceRecognitionView::class) {
+            Events("onStudentRecognized")
+        }
     }
 
     companion object {

@@ -1,5 +1,12 @@
-import { randomUUID } from "expo-crypto";
-import { getDatabase } from "../database";
+
+import { randomUUID } from 'expo-crypto';
+import { getDatabase } from '../database';
+
+export type StampColumn =
+  | 'morning_in'
+  | 'morning_out'
+  | 'afternoon_in'
+  | 'afternoon_out';
 
 export type StampingRecord = {
   id: string;
@@ -10,6 +17,7 @@ export type StampingRecord = {
   morning_out: string | null;
   afternoon_in: string | null;
   afternoon_out: string | null;
+  sync_status?: 'PENDING' | 'SYNCED';
   created_at: string;
   updated_at: string;
 };
@@ -17,149 +25,57 @@ export type StampingRecord = {
 export async function getStampingRecord(
   studentId: string,
   eventId: number,
-  stampDate: string
+  stampDate: string,
 ): Promise<StampingRecord | null> {
   const db = await getDatabase();
 
   return db.getFirstAsync<StampingRecord>(
-    `
-      SELECT *
-      FROM stamping_records
-      WHERE student_id = ?
-        AND event_id = ?
-        AND stamp_date = ?
-    `,
-    studentId,
-    eventId,
-    stampDate
-  );
-}
-
-export async function createStampingRecord(
-  studentId: string,
-  eventId: number,
-  stampDate: string
-) {
-  const db = await getDatabase();
-  const now = new Date().toISOString();
-  const id = randomUUID();
-
-  await db.runAsync(
-    `
-      INSERT OR IGNORE INTO stamping_records (
-        id,
-        student_id,
-        event_id,
-        stamp_date,
-        created_at,
-        updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?)
-    `,
-    id,
+    `SELECT *
+     FROM stamping_records
+     WHERE student_id = ?
+       AND event_id = ?
+       AND stamp_date = ?`,
     studentId,
     eventId,
     stampDate,
-    now,
-    now
   );
 }
 
-export async function updateMorningIn(
+export async function saveStamp(
   studentId: string,
   eventId: number,
   stampDate: string,
-  timestamp: string
-) {
-  await updateStamp(
-    studentId,
-    eventId,
-    stampDate,
-    "morning_in",
-    timestamp
-  );
-}
-
-export async function updateMorningOut(
-  studentId: string,
-  eventId: number,
-  stampDate: string,
-  timestamp: string
-) {
-  await updateStamp(
-    studentId,
-    eventId,
-    stampDate,
-    "morning_out",
-    timestamp
-  );
-}
-
-export async function updateAfternoonIn(
-  studentId: string,
-  eventId: number,
-  stampDate: string,
-  timestamp: string
-) {
-  await updateStamp(
-    studentId,
-    eventId,
-    stampDate,
-    "afternoon_in",
-    timestamp
-  );
-}
-
-export async function updateAfternoonOut(
-  studentId: string,
-  eventId: number,
-  stampDate: string,
-  timestamp: string
-) {
-  await updateStamp(
-    studentId,
-    eventId,
-    stampDate,
-    "afternoon_out",
-    timestamp
-  );
-}
-
-async function updateStamp(
-  studentId: string,
-  eventId: number,
-  stampDate: string,
-  column: "morning_in" | "morning_out" | "afternoon_in" | "afternoon_out",
-  timestamp: string
-) {
+  column: StampColumn,
+  timestamp: string,
+): Promise<void> {
   const db = await getDatabase();
   const now = new Date().toISOString();
 
   await db.runAsync(
-    `
-      INSERT INTO stamping_records (
-        id,
-        student_id,
-        event_id,
-        stamp_date,
-        ${column},
-        created_at,
-        updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-
-      ON CONFLICT(student_id, event_id, stamp_date)
-      DO UPDATE SET
-        ${column} = excluded.${column},
-        updated_at = excluded.updated_at
-    `,
+    `INSERT INTO stamping_records (
+       id,
+       student_id,
+       event_id,
+       stamp_date,
+       ${column},
+       sync_status,
+       created_at,
+       updated_at
+     )
+     VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?)
+     ON CONFLICT(student_id, event_id, stamp_date)
+     DO UPDATE SET
+       ${column} = excluded.${column},
+       sync_status = 'PENDING',
+       updated_at = excluded.updated_at
+     WHERE stamping_records.${column} IS NULL`,
     randomUUID(),
     studentId,
     eventId,
     stampDate,
     timestamp,
     now,
-    now
+    now,
   );
 }
 
@@ -167,22 +83,31 @@ export async function getPendingRecords(): Promise<StampingRecord[]> {
   const db = await getDatabase();
 
   return db.getAllAsync<StampingRecord>(
-    `
-      SELECT *
-      FROM stamping_records
-      ORDER BY created_at
-    `
+    `SELECT *
+     FROM stamping_records
+     WHERE sync_status = 'PENDING'
+     ORDER BY created_at`,
   );
 }
 
-export async function deleteStampingRecord(id: string) {
+export async function markStampingRecordSynced(id: string): Promise<void> {
   const db = await getDatabase();
 
   await db.runAsync(
-    `
-      DELETE FROM stamping_records
-      WHERE id = ?
-    `,
-    id
+    `UPDATE stamping_records
+     SET sync_status = 'SYNCED',
+         updated_at = ?
+     WHERE id = ?`,
+    new Date().toISOString(),
+    id,
+  );
+}
+
+export async function deleteStampingRecord(id: string): Promise<void> {
+  const db = await getDatabase();
+
+  await db.runAsync(
+    `DELETE FROM stamping_records WHERE id = ?`,
+    id,
   );
 }

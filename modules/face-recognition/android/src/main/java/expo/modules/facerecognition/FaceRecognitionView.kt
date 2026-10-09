@@ -25,6 +25,7 @@ import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.views.ExpoView
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import expo.modules.kotlin.viewevent.EventDispatcher
 
 class FaceRecognitionView(
     context: Context,

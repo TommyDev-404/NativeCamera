@@ -30,6 +30,11 @@ export async function initializeDatabase() {
     
       UNIQUE(student_id, event_id, stamp_date)
     );
+
+    CREATE TABLE IF NOT EXISTS sync_metadata (
+      key TEXT PRIMARY KEY,
+      last_synced_at TEXT
+    );
   `);
 
   console.log('SQLite database initialized successfully');

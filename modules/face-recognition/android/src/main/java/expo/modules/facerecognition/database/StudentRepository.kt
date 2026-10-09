@@ -77,40 +77,16 @@ class StudentRepository(
                 return null
             }
 
-            val yearIndex =
-                cursor.getColumnIndexOrThrow("year")
-
-            val sectionIndex =
-                cursor.getColumnIndexOrThrow("section")
+            val yearIndex = cursor.getColumnIndexOrThrow("year")
+            val sectionIndex = cursor.getColumnIndexOrThrow("section")
 
             return Student(
-                studentId = cursor.getString(
-                    cursor.getColumnIndexOrThrow("student_id")
-                ),
-
-                faceId = cursor.getLong(
-                    cursor.getColumnIndexOrThrow("face_id")
-                ),
-
-                fullName = cursor.getString(
-                    cursor.getColumnIndexOrThrow("full_name")
-                ),
-
-                year = if (cursor.isNull(yearIndex)) {
-                    null
-                } else {
-                    cursor.getInt(yearIndex)
-                },
-
-                section = if (cursor.isNull(sectionIndex)) {
-                    null
-                } else {
-                    cursor.getString(sectionIndex)
-                },
-
-                course = cursor.getString(
-                    cursor.getColumnIndexOrThrow("course")
-                )
+                studentId = cursor.getString(cursor.getColumnIndexOrThrow("student_id")),
+                faceId = cursor.getLong(cursor.getColumnIndexOrThrow("face_id")),
+                fullName = cursor.getString(cursor.getColumnIndexOrThrow("full_name")),
+                year = if (cursor.isNull(yearIndex)) null else cursor.getInt(yearIndex),
+                section = if (cursor.isNull(sectionIndex)) null else cursor.getString(sectionIndex),
+                course = cursor.getString(cursor.getColumnIndexOrThrow("course"))
             )
         }
     }

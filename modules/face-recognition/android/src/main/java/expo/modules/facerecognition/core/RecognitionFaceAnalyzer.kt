@@ -278,13 +278,9 @@ class RecognitionFaceAnalyzer(
 
         val result = repository.search(feature)
 
-        if (
-            result.matched &&
-            result.faceId != null
-        ) {
-            val student = studentRepository.getByFaceId(
-                result.faceId
-            )
+        if (result.matched && result.faceId != null) {
+            // get the student info by face id
+            val student = studentRepository.getByFaceId(result.faceId)
 
             if (student != null) {
                 currentBoxColor = matchColor
