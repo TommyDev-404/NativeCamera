@@ -18,6 +18,7 @@ import expo.modules.facerecognition.core.FaceEngine
 import expo.modules.facerecognition.core.FaceOverlayView
 import expo.modules.facerecognition.core.FaceRepository
 import expo.modules.facerecognition.core.RecognitionFaceAnalyzer
+import expo.modules.facerecognition.core.MatchSoundPlayer
 import expo.modules.facerecognition.database.ScannerDatabase
 import expo.modules.facerecognition.database.StudentRepository
 import expo.modules.facerecognition.database.models.Student
@@ -42,6 +43,8 @@ class FaceRecognitionView(
         get() = requireNotNull(
             appContext.activityProvider?.currentActivity as? LifecycleOwner
         )
+
+    private lateinit var matchSoundPlayer: MatchSoundPlayer
 
     private val frameLayout = FrameLayout(context)
     private val viewFinder = PreviewView(context)
@@ -68,6 +71,7 @@ class FaceRecognitionView(
     private var destroyed = false
 
     init {
+        matchSoundPlayer = MatchSoundPlayer(context)
         setupViews()
         initializeRecognition()
     }
@@ -362,6 +366,8 @@ class FaceRecognitionView(
 
             RecognitionFaceAnalyzer.State.MATCHED -> {
                 if (student != null) {
+                    matchSoundPlayer.play()
+
                     onStudentRecognized(
                         mapOf(
                             "studentId" to student.studentId
@@ -385,10 +391,7 @@ class FaceRecognitionView(
                 )
 
                 resultSubtitle.text = if (student != null) {
-                    "${student.fullName} · " +
-                        "${formatYear(student.year)} · " +
-                        "${student.course} · " +
-                        "${student.section ?: "Section N/A"}"
+                    "${student.fullName} · " + "${formatYear(student.year)} · " + "${student.course} · " + "${student.section ?: "Section N/A"}"
                 } else {
                     context.getString(
                         R.string.recognition_result_name_unknown
@@ -561,5 +564,9 @@ class FaceRecognitionView(
                 }
             }
         )
+    }
+
+    fun cleanup() {
+        matchSoundPlayer.release()
     }
 }

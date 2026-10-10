@@ -164,6 +164,10 @@ class FaceRecognitionModule : Module() {
 
         View(FaceRecognitionView::class) {
             Events("onStudentRecognized")
+            
+            OnViewDestroys { view ->
+                view.cleanup()
+            }
         }
     }
 

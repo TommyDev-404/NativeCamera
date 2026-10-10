@@ -24,6 +24,7 @@ color liveness_scrim
 color liveness_warn
 color white
 drawable bg_chip
+raw success_sound
 string capture_move_closer
 string msg_camera_unavailable
 string msg_engine_failed

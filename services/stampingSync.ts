@@ -19,8 +19,6 @@ export async function syncStampingRecords(): Promise<void> {
   console.log('[Stamping Sync] Starting sync...');
 
   try {
-    console.log('[Stamping Sync] Checking internet connection...');
-
     const network = await NetInfo.fetch();
 
     if (!network.isConnected || network.isInternetReachable === false) {
@@ -29,7 +27,6 @@ export async function syncStampingRecords(): Promise<void> {
     }
 
     console.log('[Stamping Sync] Internet connection available.');
-    console.log('[Stamping Sync] Fetching pending stamping records...');
 
     const records = await getPendingRecords();
 
@@ -42,8 +39,6 @@ export async function syncStampingRecords(): Promise<void> {
       `[Stamping Sync] Found ${records.length} pending record(s).`,
     );
 
-    console.log('[Stamping Sync] Uploading records to the server...');
-
     const response = await fetch(`${API_URL}/sync/stamping-records`, {
       method: 'POST',
       headers: {
@@ -55,8 +50,6 @@ export async function syncStampingRecords(): Promise<void> {
     if (!response.ok) {
       throw new Error(`Sync failed with HTTP ${response.status}`);
     }
-
-    console.log('[Stamping Sync] Server response received.');
 
     const result = await response.json();
 
