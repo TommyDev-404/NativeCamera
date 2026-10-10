@@ -1,11 +1,21 @@
--- for inspecting sqlite db
+-- for inspecting sqlite db in expo
 adb shell run-as com.mangtommy.NativeCamera ls -lh files/SQLite/
 
--- to remove the db
+-- to remove the db in expo
 adb shell run-as com.mangtommy.NativeCamera rm -f \
   files/SQLite/estampmo.db \
   files/SQLite/estampmo.db-wal \
-  files/SQLite/estampmo.db-shm \
+  files/SQLite/estampmo.db-shm 
+
+-- find db in native 
+adb shell run-as com.mangtommy.NativeCamera ls -lh databases/
+
+-- remove db in native
+adb shell run-as com.mangtommy.NativeCamera rm -f \
+  databases/estampmo.db \
+  databases/estampmo.db-journal \
+  databases/estampmo.db-wal \
+  databases/estampmo.db-shm
 
 -- view feature hub storage
 adb shell run-as com.mangtommy.NativeCamera ls -l files/face_hub/Pikachu/

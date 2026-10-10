@@ -8,7 +8,7 @@ export type StampColumn =
   | 'afternoon_in'
   | 'afternoon_out';
 
-export type StampingRecord = {
+type StampingRecord = {
   id: string;
   student_id: string;
   event_id: number;
@@ -21,6 +21,11 @@ export type StampingRecord = {
   created_at: string;
   updated_at: string;
 };
+
+type SaveStampResult =
+  | { status: 'SAVED' }
+  | { status: 'ALREADY_STAMPED' };
+
 
 export async function getStampingRecord(
   studentId: string,
@@ -41,34 +46,35 @@ export async function getStampingRecord(
   );
 }
 
+// every new stamp recorded, sync status become pending making it simpler to sync the record to cloud
 export async function saveStamp(
   studentId: string,
   eventId: number,
   stampDate: string,
   column: StampColumn,
   timestamp: string,
-): Promise<void> {
+): Promise<SaveStampResult> {
   const db = await getDatabase();
   const now = new Date().toISOString();
 
-  await db.runAsync(
+  const result = await db.runAsync(
     `INSERT INTO stamping_records (
-       id,
-       student_id,
-       event_id,
-       stamp_date,
-       ${column},
-       sync_status,
-       created_at,
-       updated_at
-     )
-     VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?)
-     ON CONFLICT(student_id, event_id, stamp_date)
-     DO UPDATE SET
-       ${column} = excluded.${column},
-       sync_status = 'PENDING',
-       updated_at = excluded.updated_at
-     WHERE stamping_records.${column} IS NULL`,
+      id,
+      student_id,
+      event_id,
+      stamp_date,
+      ${column},
+      sync_status,
+      created_at,
+      updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?)
+    ON CONFLICT(student_id, event_id, stamp_date)
+    DO UPDATE SET
+      ${column} = excluded.${column},
+      sync_status = 'PENDING',
+      updated_at = excluded.updated_at
+    WHERE stamping_records.${column} IS NULL`,
     randomUUID(),
     studentId,
     eventId,
@@ -77,6 +83,12 @@ export async function saveStamp(
     now,
     now,
   );
+
+  if (result.changes === 0) {
+    return { status: 'ALREADY_STAMPED' };
+  }
+
+  return { status: 'SAVED' };
 }
 
 export async function getPendingRecords(): Promise<StampingRecord[]> {
@@ -90,16 +102,17 @@ export async function getPendingRecords(): Promise<StampingRecord[]> {
   );
 }
 
-export async function markStampingRecordSynced(id: string): Promise<void> {
+export async function markStampingRecordSynced(id: string, expectedUpdatedAt: string): Promise<void> {
   const db = await getDatabase();
 
   await db.runAsync(
     `UPDATE stamping_records
-     SET sync_status = 'SYNCED',
-         updated_at = ?
-     WHERE id = ?`,
-    new Date().toISOString(),
+     SET sync_status = 'SYNCED'
+     WHERE id = ?
+       AND updated_at = ?
+       AND sync_status = 'PENDING'`,
     id,
+    expectedUpdatedAt,
   );
 }
 

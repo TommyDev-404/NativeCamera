@@ -27,6 +27,8 @@ import {
   updateLastSyncedAt,
 } from './local_db/repositories/syncMetadataRepository';
 import { saveStamp, type StampColumn } from './local_db/repositories/stampingRepository';
+import { API_URL } from './lib/apiURL';
+import { useStampingSync } from './hook/useStampingSync';
 
 type EmbeddingEvent = {
   nativeEvent: {
@@ -89,8 +91,6 @@ const STAMPING_MODES: { label: string; value: StampType }[] = [
   },
 ];
 
-const API_URL = 'http://192.168.100.209:3000';
-
 const NativeFaceRecognitionView = requireNativeView<FaceRecognitionViewProps>('FaceRecognition');
 const NativeFaceRegistrationView = requireNativeView<FaceRegistrationViewProps>('FaceRegistration');
 
@@ -100,12 +100,10 @@ const accountData = {
   first_name: 'Rustom',
   last_name: 'Galicia',
   email: 'galiciarustom14@gmail.com',
-  section_id: 142,
+  section_id: 19,
 };
 
-async function registerStudent(
-  data: RegisterStudentData,
-): Promise<RegisterStudentResponse> {
+async function registerStudent(data: RegisterStudentData): Promise<RegisterStudentResponse> {
   const response = await fetch(`${API_URL}/auth/create-student-account`, {
     method: 'POST',
     headers: {
@@ -125,12 +123,6 @@ async function registerStudent(
   }
 
   return result;
-}
-
-function getPhilippineTimestamp(): string {
-  return new Date().toLocaleString('sv-SE', {
-    timeZone: 'Asia/Manila',
-  }).replace(' ', 'T');
 }
 
 function getPhilippineDate(): string {
@@ -183,6 +175,9 @@ export default function App() {
   const [selectedStampType, setSelectedStampType] = useState<StampType>('morning_in');
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
   const [activeEventStatus, setActiveEventStatus] = useState<ActiveEventStatus>('loading');
+  
+  // sync pending records
+  useStampingSync();
 
   useEffect(() => {
     const requestCameraPermission = async () => {
@@ -348,7 +343,7 @@ export default function App() {
     }
   };
 
-  const handleStudentRecognized = async (event: StudentRecognizedEvent) => {
+  const handleStudentRecognized = async (event: StudentRecognizedEvent,) => {
     if (!activeEvent) {
       Alert.alert(
         'No Active Event',
@@ -373,13 +368,28 @@ export default function App() {
       const columns = stampColumns[selectedStampType];
 
       for (const column of columns) {
-        await saveStamp(
+        const result = await saveStamp(
           studentId,
           activeEvent.id,
           stampDate,
           column,
           timestamp,
         );
+
+        if (result.status === 'ALREADY_STAMPED') {
+          const columnLabels: Record<StampColumn, string> = {
+            morning_in: 'Morning In',
+            morning_out: 'Morning Out',
+            afternoon_in: 'Afternoon In',
+            afternoon_out: 'Afternoon Out',
+          };
+
+          Alert.alert(
+            'Already Stamped',
+            `${studentId} has already stamped for ${columnLabels[column]}.`,
+          );
+          return;
+        }
       }
 
       console.log('Stamp saved locally:', {

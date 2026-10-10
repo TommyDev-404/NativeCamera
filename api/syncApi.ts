@@ -1,5 +1,4 @@
-
-const API_URL = 'http://192.168.100.209:3000';
+import { API_URL } from "../lib/apiURL";
 
 export type SyncStudent = {
   student_id: string;
